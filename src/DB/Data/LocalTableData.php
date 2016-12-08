@@ -97,7 +97,7 @@ class LocalTableData {
             $columns1 = array_diff($columns1, $params->fieldsToIgnore[$table]);
             $columns2 = array_diff($columns2, $params->fieldsToIgnore[$table]);
         }
-        
+
         $wrapAs = function($arr, $p1, $p2) {
             return array_map(function($el) use ($p1, $p2) {
                 return "`{$p1}`.`{$el}` as `{$p2}{$el}`";
@@ -106,7 +106,7 @@ class LocalTableData {
 
         $wrapCast = function($arr, $p) {
             return array_map(function($el) use ($p) {
-                return "CAST(`{$p}`.`{$el}` AS CHAR CHARACTER SET utf8)";
+                return "COALESCE (CAST(`{$p}`.`{$el}` AS CHAR CHARACTER SET utf8), '')";
             }, $arr);
         };
 
@@ -114,7 +114,7 @@ class LocalTableData {
         $columnsA   = implode(',', $wrapCast($columns1, 'a'));
         $columnsBas = implode(',', $wrapAs($columns2, 'b', 't_'));
         $columnsB   = implode(',', $wrapCast($columns2, 'b'));
-        
+
         $keyCols = implode(' AND ', array_map(function($el) {
             return "a.{$el} = b.{$el}";
         }, $key));
@@ -122,13 +122,13 @@ class LocalTableData {
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result = $this->source->select(
            "SELECT * FROM (
-                SELECT $columnsAas, $columnsBas, MD5(concat($columnsA)) AS hash1,
-                MD5(concat($columnsB)) AS hash2 FROM {$db1}.{$table} as a 
-                INNER JOIN {$db2}.{$table} as b  
+                SELECT $columnsAas, $columnsBas, MD5(CONCAT_WS('|||',$columnsA)) AS hash1,
+                MD5(CONCAT_WS('|||',$columnsB)) AS hash2 FROM {$db1}.{$table} as a
+                INNER JOIN {$db2}.{$table} as b
                 ON $keyCols
             ) t WHERE hash1 <> hash2");
         $this->source->setFetchMode(\PDO::FETCH_ASSOC);
-        
+
         foreach ($result as $row) {
             $diff = []; $keys = [];
             foreach ($row as $k => $value) {
@@ -136,9 +136,9 @@ class LocalTableData {
                     $theKey = substr($k, 2);
                     $targetKey = 't_'.$theKey;
                     $sourceValue = $value;
-                    
+
                     if (in_array($theKey, $key)) $keys[$theKey] = $value;
-                    
+
                     if (isset($row[$targetKey])) {
                         $targetValue = $row[$targetKey];
                         if ($sourceValue != $targetValue) {
