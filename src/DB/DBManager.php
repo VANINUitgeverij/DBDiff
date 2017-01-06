@@ -29,21 +29,28 @@ class DBManager {
     }
 
     public function testResources($params) {
-        $this->testResource($params->input['source'], 'source');
-        $this->testResource($params->input['target'], 'target');
+        $this->testResource($params->input['source'], 'source', $params->maxid);
+        $this->testResource($params->input['target'], 'target', $params->maxid);
     }
 
-    public function testResource($input, $res) {
+    public function testResource($input, $res, $maxid) {
         try {
             $this->capsule->getConnection($res);
         } catch(\Exception $e) {
             throw new DBException("Can't connect to target database");
         }
         if (!empty($input['table'])) {
+            $connection = $this->capsule->getConnection($res);
             try {
-                $this->capsule->getConnection($res)->table($input['table'])->first();
+                $connection->table($input['table'])->first();
             } catch(\Exception $e) {
                 throw new DBException("Can't access target table");
+            }
+            $keys = $this->getKey($connection, $input['table']);
+            foreach ($maxid as $pk => $value) {
+                if (!in_array($pk, $keys)) {
+                    throw new DBException("'$pk' is not a primary key");
+                }
             }
         }
     }
