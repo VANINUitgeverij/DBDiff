@@ -47,7 +47,7 @@ class CLIGetter implements ParamsGetter {
         if ($getopt->get('--debug'))
             $params->debug = $getopt->get('--debug');
         if ($getopt->get('--maxid'))
-            $params->debug = $this->parseMaxID($getopt->get('--maxid'));
+            $params->maxid = $this->parseMaxID($getopt->get('--maxid'));
 
         return $params;
     }
