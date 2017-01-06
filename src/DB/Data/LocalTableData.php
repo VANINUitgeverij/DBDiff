@@ -58,8 +58,13 @@ class LocalTableData {
                 $item = "`{$p}`.`{$key}` <= {$item}";
             });
         };
-        $keyNulls1 = implode(' AND ', ($keyNull($key, 'a') + $maxIDs($maxid, 'a')));
-        $keyNulls2 = implode(' AND ', ($keyNull($key, 'b') + $maxIDs($maxid, 'b')));
+        $maxida = $maxid;
+        $maxidb = $maxid;
+        $maxIDs($maxida, 'a');
+        $maxIDs($maxidb, 'b');
+
+        $keyNulls1 = implode(' AND ', array_merge($keyNull($key, 'a'), $maxida));
+        $keyNulls2 = implode(' AND ', array_merge($keyNull($key, 'b'), $maxidb));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result1 = $this->source->select(
@@ -126,13 +131,16 @@ class LocalTableData {
         }, $key));
 
         $maxIDs = function ($arr, $p) {
-            return array_map(function ($item, $key) use ($p) {
-                return "`{$p}`.`{$key}` <= {$item}";
-            }, $arr);
+            return array_walk($arr, function (&$item, $key) use ($p) {
+                $item = "`{$p}`.`{$key}` <= {$item}";
+            });
         };
+        $maxida = $maxid;
+        $maxidb = $maxid;
+        $maxIDs($maxida, 'a');
+        $maxIDs($maxidb, 'b');
 
-        $maxIDConstraints = implode(' AND ', array_merge($maxIDs($maxid, 'a'), $maxIDs($maxid, 'b')));
-
+        $maxIDConstraints = implode(' AND ', array_merge($maxida, $maxidb));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result = $this->source->select(

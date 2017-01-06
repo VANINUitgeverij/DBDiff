@@ -54,8 +54,8 @@ class DefaultParams {
     public $input = [];
 
     /**
-     * Max id to compare. If null no max id is used. Usage: ExampleID:200
+     * Max id to compare. If [] no max id is used. Usage: ExampleID:200
      */
-    public $maxid = null;
+    public $maxid = [];
 
 }
