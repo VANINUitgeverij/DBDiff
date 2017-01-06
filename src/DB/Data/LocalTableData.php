@@ -16,16 +16,16 @@ class LocalTableData {
         $this->target = $this->manager->getDB('target');
     }
 
-    public function getDiff($table, $key) {
+    public function getDiff($table, $key, $maxid) {
         Logger::info("Now calculating data diff for table `$table`");
-        $diffSequence1 = $this->getOldNewDiff($table, $key);
-        $diffSequence2 = $this->getChangeDiff($table, $key);
+        $diffSequence1 = $this->getOldNewDiff($table, $key, $maxid);
+        $diffSequence2 = $this->getChangeDiff($table, $key, $maxid);
         $diffSequence = array_merge($diffSequence1, $diffSequence2);
 
         return $diffSequence;
     }
 
-    public function getOldNewDiff($table, $key) {
+    public function getOldNewDiff($table, $key, $maxid) {
         $diffSequence = [];
 
         $db1 = $this->source->getDatabaseName();
@@ -52,8 +52,14 @@ class LocalTableData {
                 return "`{$p}`.`{$el}` IS NULL";
             }, $arr);
         };
-        $keyNulls1 = implode(' AND ', $keyNull($key, 'a'));
-        $keyNulls2 = implode(' AND ', $keyNull($key, 'b'));
+
+        $maxIDs = function ($arr, $p) {
+            return array_map(function ($item, $key) use ($p) {
+                return "`{$p}`.`{$key}` <= {$item}";
+            }, $arr);
+        };
+        $keyNulls1 = implode(' AND ', array_merge($keyNull($key, 'a'), $maxIDs($maxid, 'a')));
+        $keyNulls2 = implode(' AND ', array_merge($keyNull($key, 'b'), $maxIDs($maxid, 'b')));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result1 = $this->source->select(
@@ -82,7 +88,7 @@ class LocalTableData {
         return $diffSequence;
     }
 
-    public function getChangeDiff($table, $key) {
+    public function getChangeDiff($table, $key, $maxid) {
         $params = ParamsFactory::get();
 
         $diffSequence = [];
@@ -119,6 +125,15 @@ class LocalTableData {
             return "a.{$el} = b.{$el}";
         }, $key));
 
+        $maxIDs = function ($arr, $p) {
+            return array_map(function ($item, $key) use ($p) {
+                return "`{$p}`.`{$key}` <= {$item}";
+            }, $arr);
+        };
+
+        $maxIDConstraints = implode(' AND ', array_merge($maxIDs($maxid, 'a'), $maxIDs($maxid, 'b')));
+
+
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result = $this->source->select(
            "SELECT * FROM (
@@ -126,7 +141,7 @@ class LocalTableData {
                 MD5(CONCAT_WS('|||',$columnsB)) AS hash2 FROM {$db1}.{$table} as a
                 INNER JOIN {$db2}.{$table} as b
                 ON $keyCols
-            ) t WHERE hash1 <> hash2");
+            ) t WHERE hash1 <> hash2 ".(empty($maxIDConstraints) ? '' : ' AND '.$maxIDConstraints));
         $this->source->setFetchMode(\PDO::FETCH_ASSOC);
 
         foreach ($result as $row) {

@@ -11,9 +11,9 @@ class DiffCalculator {
     function __construct() {
         $this->manager = new DBManager;
     }
-    
+
     public function getDiff($params) {
-        
+
         // Connect and test accessibility
         $this->manager->connect($params);
         $this->manager->testResources($params);
@@ -38,7 +38,7 @@ class DiffCalculator {
                 $dataDiff = $dbData->getDiff();
             } else {
                 $tableData = new TableData($this->manager);
-                $dataDiff = $tableData->getDiff($params->input['source']['table']);
+                $dataDiff = $tableData->getDiff($params->input['source']['table'], $params->maxid);
             }
         }
 

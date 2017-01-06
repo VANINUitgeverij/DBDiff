@@ -6,7 +6,7 @@ use Aura\Cli\Status;
 
 
 class CLIGetter implements ParamsGetter {
-    
+
     public function getParams() {
         $params = new \StdClass;
 
@@ -17,9 +17,10 @@ class CLIGetter implements ParamsGetter {
         $getopt = $context->getopt([
             'server1::', 'server2::', 'format::',
             'template::', 'type::', 'include::',
-            'nocomments::', 'config::', 'output::', 'debug::'
+            'nocomments::', 'config::', 'output::', 'debug::',
+            'maxid::',
         ]);
-    
+
         $input = $getopt->get(1);
         if ($input) {
             $params->input = $this->parseInput($input);
@@ -45,6 +46,8 @@ class CLIGetter implements ParamsGetter {
             $params->output = $getopt->get('--output');
         if ($getopt->get('--debug'))
             $params->debug = $getopt->get('--debug');
+        if ($getopt->get('--maxid'))
+            $params->debug = $this->parseMaxID($getopt->get('--maxid'));
 
         return $params;
     }
@@ -59,6 +62,22 @@ class CLIGetter implements ParamsGetter {
             'host'     => $dns[0],
             'port'     => $dns[1]
         ];
+    }
+
+    protected function parseMaxID($maxid) {
+        if ($maxid === null) {
+            return [];
+        }
+
+        $maxids = explode(' ', $maxid);
+        return array_reduce($maxids, function ($result, $id) {
+            $id = explode(':', $id);
+            if (sizeof($id) !== 2) {
+                throw new CLIException("Max id has to be formatted like <key>:<max_id>");
+            }
+            $result[$id[0]] = $id[1];
+            return $result;
+        }, []);
     }
 
     protected function parseInput($input) {
