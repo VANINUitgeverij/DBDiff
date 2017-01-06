@@ -143,7 +143,8 @@ class LocalTableData {
                 MD5(CONCAT_WS('|||',$columnsB)) AS hash2 FROM {$db1}.{$table} as a
                 INNER JOIN {$db2}.{$table} as b
                 ON $keyCols
-            ) t WHERE hash1 <> hash2 ".(empty($maxIDConstraints) ? '' : ' AND '.$maxIDConstraints));
+                ".(empty($maxIDConstraints) ? '' : ' WHERE '.$maxIDConstraints)."
+            ) t WHERE hash1 <> hash2");
         $this->source->setFetchMode(\PDO::FETCH_ASSOC);
 
         foreach ($result as $row) {
