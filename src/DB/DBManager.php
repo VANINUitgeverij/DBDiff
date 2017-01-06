@@ -40,13 +40,12 @@ class DBManager {
             throw new DBException("Can't connect to target database");
         }
         if (!empty($input['table'])) {
-            $connection = $this->capsule->getConnection($res);
             try {
-                $connection->table($input['table'])->first();
+                $this->capsule->getConnection($res)->table($input['table'])->first();
             } catch(\Exception $e) {
                 throw new DBException("Can't access target table");
             }
-            $keys = $this->getKey($connection, $input['table']);
+            $keys = $this->getKey($res, $input['table']);
             foreach ($maxid as $pk => $value) {
                 if (!in_array($pk, $keys)) {
                     throw new DBException("'$pk' is not a primary key");
