@@ -54,9 +54,9 @@ class LocalTableData {
         };
 
         $maxIDs = function ($arr, $p) {
-            return array_map(function ($item, $key) use ($p) {
-                return "`{$p}`.`{$key}` <= {$item}";
-            }, $arr);
+            return array_walk($arr, function (&$item, $key) use ($p) {
+                $item = "`{$p}`.`{$key}` <= {$item}";
+            });
         };
         $keyNulls1 = implode(' AND ', array_merge($keyNull($key, 'a'), $maxIDs($maxid, 'a')));
         $keyNulls2 = implode(' AND ', array_merge($keyNull($key, 'b'), $maxIDs($maxid, 'b')));
