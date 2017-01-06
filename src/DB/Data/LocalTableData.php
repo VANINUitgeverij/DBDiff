@@ -58,8 +58,8 @@ class LocalTableData {
                 $item = "`{$p}`.`{$key}` <= {$item}";
             });
         };
-        $keyNulls1 = implode(' AND ', array_merge($keyNull($key, 'a'), $maxIDs($maxid, 'a')));
-        $keyNulls2 = implode(' AND ', array_merge($keyNull($key, 'b'), $maxIDs($maxid, 'b')));
+        $keyNulls1 = implode(' AND ', ($keyNull($key, 'a') + $maxIDs($maxid, 'a')));
+        $keyNulls2 = implode(' AND ', ($keyNull($key, 'b') + $maxIDs($maxid, 'b')));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result1 = $this->source->select(
