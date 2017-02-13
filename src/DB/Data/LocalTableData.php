@@ -159,7 +159,7 @@ class LocalTableData {
 
                     if (isset($row[$targetKey])) {
                         $targetValue = $row[$targetKey];
-                        if ($sourceValue != $targetValue) {
+                        if ($sourceValue !== $targetValue) {
                             $diff[$theKey] = new \Diff\DiffOp\DiffOpChange($targetValue, $sourceValue);
                         }
                     } else {
