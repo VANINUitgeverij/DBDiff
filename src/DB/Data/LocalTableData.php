@@ -60,8 +60,8 @@ class LocalTableData {
             return $arr;
         };
 
-        $keyNulls1 = implode(' AND ', array_merge($keyNull($key, 'a'), $maxIDs($maxid, 'a')));
-        $keyNulls2 = implode(' AND ', array_merge($keyNull($key, 'b'), $maxIDs($maxid, 'b')));
+        $keyNulls1 = implode(' AND ', array_merge($keyNull($key, 'a'), $maxIDs($maxid, 'b')));
+        $keyNulls2 = implode(' AND ', array_merge($keyNull($key, 'b'), $maxIDs($maxid, 'a')));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result1 = $this->source->select(
