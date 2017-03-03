@@ -16,16 +16,17 @@ class LocalTableData {
         $this->target = $this->manager->getDB('target');
     }
 
-    public function getDiff($table, $key, $maxid, $excludes) {
+    public function getDiff($table, $key) {
         Logger::info("Now calculating data diff for table `$table`");
-        $diffSequence1 = $this->getOldNewDiff($table, $key, $maxid, $excludes);
-        $diffSequence2 = $this->getChangeDiff($table, $key, $maxid, $excludes);
+        $diffSequence1 = $this->getOldNewDiff($table, $key);
+        $diffSequence2 = $this->getChangeDiff($table, $key);
         $diffSequence = array_merge($diffSequence1, $diffSequence2);
 
         return $diffSequence;
     }
 
-    public function getOldNewDiff($table, $key, $maxid, $excludes) {
+    public function getOldNewDiff($table, $key) {
+        $params = ParamsFactory::get();
         $diffSequence = [];
 
         $db1 = $this->source->getDatabaseName();
@@ -55,13 +56,13 @@ class LocalTableData {
 
         $keyNulls1 = implode(' AND ', array_merge(
             $keyNull($key, 'a'),
-            $this->maxIDs($maxid, 'b'),
-            $this->excludeIDs($excludes, 'b')
+            $this->maxIDs($params->maxid, 'b'),
+            $this->excludeIDs($params->exclude, 'b')
         ));
         $keyNulls2 = implode(' AND ', array_merge(
             $keyNull($key, 'b'),
-            $this->maxIDs($maxid, 'a'),
-            $this->excludeIDs($excludes, 'a')
+            $this->maxIDs($params->maxid, 'a'),
+            $this->excludeIDs($params->exclude, 'a')
         ));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
@@ -91,7 +92,7 @@ class LocalTableData {
         return $diffSequence;
     }
 
-    public function getChangeDiff($table, $key, $maxid, $excludes) {
+    public function getChangeDiff($table, $key) {
         $params = ParamsFactory::get();
 
         $diffSequence = [];
@@ -129,10 +130,10 @@ class LocalTableData {
         }, $key));
 
         $maxIDConstraints = implode(' AND ', array_merge(
-            $this->maxIDs($maxid, 'a'),
-            $this->maxIDs($maxid, 'b'),
-            $this->excludeIDs($excludes, 'b'),
-            $this->excludeIDs($excludes, 'a')
+            $this->maxIDs($params->maxid, 'a'),
+            $this->maxIDs($params->maxid, 'b'),
+            $this->excludeIDs($params->exclude, 'b'),
+            $this->excludeIDs($params->exclude, 'a')
         ));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
@@ -177,6 +178,10 @@ class LocalTableData {
 
     private function maxIDs($arr, $p)
     {
+        if (is_null($arr)) {
+            return [];
+        }
+
         array_walk($arr, function (&$item, $key) use ($p) {
             $item = "`{$p}`.`{$key}` <= {$item}";
         });
@@ -185,6 +190,10 @@ class LocalTableData {
 
     private function excludeIDs($arr, $p)
     {
+        if (is_null($arr)) {
+            return [];
+        }
+
         array_walk($arr, function (&$item, $key) use ($p) {
             $item = "`{$p}`.`{$key}` NOT IN ({$item})";
         });
