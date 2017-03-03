@@ -38,7 +38,7 @@ class DiffCalculator {
                 $dataDiff = $dbData->getDiff();
             } else {
                 $tableData = new TableData($this->manager);
-                $dataDiff = $tableData->getDiff($params->input['source']['table'], $params->maxid);
+                $dataDiff = $tableData->getDiff($params->input['source']['table'], $params->maxid, $params->exclude);
             }
         }
 

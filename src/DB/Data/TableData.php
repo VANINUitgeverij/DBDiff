@@ -55,7 +55,7 @@ class TableData {
         return $diffSequence;
     }
 
-    public function getDiff($table, $maxid) {
+    public function getDiff($table, $maxid, $excludes) {
         $server1 = $this->source->getConfig('host').':'.$this->source->getConfig('port');
         $server2 = $this->target->getConfig('host').':'.$this->target->getConfig('port');
         $sourceKey  = $this->manager->getKey('source', $table);
@@ -63,7 +63,7 @@ class TableData {
         $this->checkKeys($table, $sourceKey, $targetKey);
 
         if ($server1 == $server2) {
-            return $this->localTableData->getDiff($table, $sourceKey, $maxid);
+            return $this->localTableData->getDiff($table, $sourceKey, $maxid, $excludes);
         } else {
             return $this->distTableData->getDiff($table, $sourceKey);
         }

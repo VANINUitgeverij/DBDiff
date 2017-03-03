@@ -18,7 +18,7 @@ class CLIGetter implements ParamsGetter {
             'server1::', 'server2::', 'format::',
             'template::', 'type::', 'include::',
             'nocomments::', 'config::', 'output::', 'debug::',
-            'maxid::',
+            'maxid::', 'exlcude::',
         ]);
 
         $input = $getopt->get(1);
@@ -48,6 +48,8 @@ class CLIGetter implements ParamsGetter {
             $params->debug = $getopt->get('--debug');
         if ($getopt->get('--maxid'))
             $params->maxid = $this->parseMaxID($getopt->get('--maxid'));
+        if ($getopt->get('--exclude'))
+            $params->exclude = $this->parseExclude($getopt->get('--exclude'));
 
         return $params;
     }
@@ -74,6 +76,22 @@ class CLIGetter implements ParamsGetter {
             $id = explode(':', $id);
             if (sizeof($id) !== 2) {
                 throw new CLIException("Max id has to be formatted like <key>:<max_id>");
+            }
+            $result[$id[0]] = $id[1];
+            return $result;
+        }, []);
+    }
+
+    protected function parseExclude($exclude) {
+        if ($exclude === null) {
+            return [];
+        }
+
+        $excludes = explode(' ', $exclude);
+        return array_reduce($excludes, function ($result, $id) {
+            $id = explode(':', $id);
+            if (sizeof($id) !== 2) {
+                throw new CLIException("Exclude has to be formatted like <key>:<exclude_values>");
             }
             $result[$id[0]] = $id[1];
             return $result;

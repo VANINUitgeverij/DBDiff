@@ -16,16 +16,16 @@ class LocalTableData {
         $this->target = $this->manager->getDB('target');
     }
 
-    public function getDiff($table, $key, $maxid) {
+    public function getDiff($table, $key, $maxid, $excludes) {
         Logger::info("Now calculating data diff for table `$table`");
-        $diffSequence1 = $this->getOldNewDiff($table, $key, $maxid);
-        $diffSequence2 = $this->getChangeDiff($table, $key, $maxid);
+        $diffSequence1 = $this->getOldNewDiff($table, $key, $maxid, $excludes);
+        $diffSequence2 = $this->getChangeDiff($table, $key, $maxid, $excludes);
         $diffSequence = array_merge($diffSequence1, $diffSequence2);
 
         return $diffSequence;
     }
 
-    public function getOldNewDiff($table, $key, $maxid) {
+    public function getOldNewDiff($table, $key, $maxid, $excludes) {
         $diffSequence = [];
 
         $db1 = $this->source->getDatabaseName();
@@ -53,15 +53,16 @@ class LocalTableData {
             }, $arr);
         };
 
-        $maxIDs = function ($arr, $p) {
-            array_walk($arr, function (&$item, $key) use ($p) {
-                $item = "`{$p}`.`{$key}` <= {$item}";
-            });
-            return $arr;
-        };
-
-        $keyNulls1 = implode(' AND ', array_merge($keyNull($key, 'a'), $maxIDs($maxid, 'b')));
-        $keyNulls2 = implode(' AND ', array_merge($keyNull($key, 'b'), $maxIDs($maxid, 'a')));
+        $keyNulls1 = implode(' AND ', array_merge(
+            $keyNull($key, 'a'),
+            $this->maxIDs($maxid, 'b'),
+            $this->excludeIDs($excludes, 'b')
+        ));
+        $keyNulls2 = implode(' AND ', array_merge(
+            $keyNull($key, 'b'),
+            $this->maxIDs($maxid, 'a'),
+            $this->excludeIDs($excludes, 'a')
+        ));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result1 = $this->source->select(
@@ -90,7 +91,7 @@ class LocalTableData {
         return $diffSequence;
     }
 
-    public function getChangeDiff($table, $key, $maxid) {
+    public function getChangeDiff($table, $key, $maxid, $excludes) {
         $params = ParamsFactory::get();
 
         $diffSequence = [];
@@ -127,14 +128,12 @@ class LocalTableData {
             return "a.{$el} = b.{$el}";
         }, $key));
 
-        $maxIDs = function ($arr, $p) {
-            array_walk($arr, function (&$item, $key) use ($p) {
-                $item = "`{$p}`.`{$key}` <= {$item}";
-            });
-            return $arr;
-        };
-
-        $maxIDConstraints = implode(' AND ', array_merge($maxIDs($maxid, 'a'), $maxIDs($maxid, 'b')));
+        $maxIDConstraints = implode(' AND ', array_merge(
+            $this->maxIDs($maxid, 'a'),
+            $this->maxIDs($maxid, 'b'),
+            $this->excludeIDs($excludes, 'b'),
+            $this->excludeIDs($excludes, 'a')
+        ));
 
         $this->source->setFetchMode(\PDO::FETCH_NAMED);
         $result = $this->source->select(
@@ -174,6 +173,22 @@ class LocalTableData {
         }
 
         return $diffSequence;
+    }
+
+    private function maxIDs($arr, $p)
+    {
+        array_walk($arr, function (&$item, $key) use ($p) {
+            $item = "`{$p}`.`{$key}` <= {$item}";
+        });
+        return $arr;
+    }
+
+    private function excludeIDs($arr, $p)
+    {
+        array_walk($arr, function (&$item, $key) use ($p) {
+            $item = "`{$p}`.`{$key}` NOT IN ({$item})";
+        });
+        return $arr;
     }
 
 }
