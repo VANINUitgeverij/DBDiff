@@ -18,7 +18,7 @@ class CLIGetter implements ParamsGetter {
             'server1::', 'server2::', 'format::',
             'template::', 'type::', 'include::',
             'nocomments::', 'config::', 'output::', 'debug::',
-            'maxid::', 'exlcude::',
+            'maxid::', 'exlcude::', 'autoincrement::',
         ]);
 
         $input = $getopt->get(1);
@@ -50,6 +50,8 @@ class CLIGetter implements ParamsGetter {
             $params->maxid = $this->parseMaxID($getopt->get('--maxid'));
         if ($getopt->get('--exclude'))
             $params->exclude = $this->parseExclude($getopt->get('--exclude'));
+        if ($getopt->get('--autoincrement'))
+            $params->link = $getopt->get('--autoincrement');
 
         return $params;
     }

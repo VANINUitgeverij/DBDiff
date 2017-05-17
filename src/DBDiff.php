@@ -27,7 +27,7 @@ class DBDiff {
                 Logger::info("Identical resources");
             } else {
                 // SQL
-                $sqlGenerator = new SQLGenerator($diff);
+                $sqlGenerator = new SQLGenerator($diff, $params);
                 $up =''; $down = '';
                 if ($params->include !== 'down') {
                     $up = $sqlGenerator->getUp();
