@@ -51,7 +51,7 @@ class CLIGetter implements ParamsGetter {
         if ($getopt->get('--exclude'))
             $params->exclude = $this->parseExclude($getopt->get('--exclude'));
         if ($getopt->get('--autoincrement'))
-            $params->link = $getopt->get('--autoincrement');
+            $params->autoincrement = $getopt->get('--autoincrement');
 
         return $params;
     }
