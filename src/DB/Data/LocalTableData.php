@@ -167,10 +167,14 @@ class LocalTableData {
                     }
                 }
             }
-            $diffSequence[] = new UpdateData($table, [
-                'keys' => $keys,
-                'diff' => $diff
-            ]);
+
+            if (!empty($diff)) {
+                $diffSequence[] = new UpdateData($table, [
+                    'keys' => $keys,
+                    'diff' => $diff
+                ]);
+            }
+
         }
 
         return $diffSequence;
