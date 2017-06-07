@@ -18,9 +18,11 @@ class LocalTableData {
 
     public function getDiff($table, $key) {
         Logger::info("Now calculating data diff for table `$table`");
-        $diffSequence1 = $this->getOldNewDiff($table, $key);
-        $diffSequence2 = $this->getChangeDiff($table, $key);
-        $diffSequence = array_merge($diffSequence1, $diffSequence2);
+        $diffSequence = $this->getOldNewDiff($table, $key);
+        if (empty($params->autoincrement)) {
+            $diffSequence2 = $this->getChangeDiff($table, $key);
+            $diffSequence = array_merge($diffSequence, $diffSequence2);
+        }
 
         return $diffSequence;
     }
@@ -34,6 +36,10 @@ class LocalTableData {
 
         $columns1 = $this->manager->getColumns('source', $table);
         $columns2 = $this->manager->getColumns('target', $table);
+
+        if (!empty($params->autoincrement)) {
+            $key = $params->autoincrement;
+        }
 
         $wrapConvert = function($arr, $p) {
             return array_map(function($el) use ($p) {

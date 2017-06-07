@@ -16,7 +16,7 @@ class DeleteDataSQL implements SQLGenInterface {
 
         if ($this->params->autoincrement) {
             $values = $this->obj->diff['diff']->getOldValue();
-            $keys = array_diff_key($values, $keys);
+            $keys = array_intersect_key($values, $keys);
         }
 
         array_walk($keys, function(&$value, $column) {
@@ -33,7 +33,7 @@ class DeleteDataSQL implements SQLGenInterface {
         $columns = '';
         if ($this->params->autoincrement) {
             $keys = $this->obj->diff['keys'];
-            $values = array_diff_key($values, $keys);
+            $values = array_intersect_key($values, $keys);
             $columns = array_keys($values);
 
             if (!empty($columns)) {

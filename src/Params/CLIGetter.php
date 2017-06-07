@@ -51,7 +51,7 @@ class CLIGetter implements ParamsGetter {
         if ($getopt->get('--exclude'))
             $params->exclude = $this->parseExclude($getopt->get('--exclude'));
         if ($getopt->get('--autoincrement'))
-            $params->autoincrement = $getopt->get('--autoincrement');
+            $params->autoincrement = $this->parseAutoIncrement($getopt->get('--autoincrement'));
 
         return $params;
     }
@@ -98,6 +98,14 @@ class CLIGetter implements ParamsGetter {
             $result[$id[0]] = $id[1];
             return $result;
         }, []);
+    }
+
+    protected function parseAutoIncrement($autoincrement) {
+        if ($autoincrement === null) {
+            return [];
+        }
+
+        return explode(' ', $autoincrement);
     }
 
     protected function parseInput($input) {
