@@ -19,6 +19,7 @@ class LocalTableData {
     public function getDiff($table, $key) {
         Logger::info("Now calculating data diff for table `$table`");
         $diffSequence = $this->getOldNewDiff($table, $key);
+        $params = ParamsFactory::get();
         if (empty($params->autoincrement)) {
             $diffSequence2 = $this->getChangeDiff($table, $key);
             $diffSequence = array_merge($diffSequence, $diffSequence2);
